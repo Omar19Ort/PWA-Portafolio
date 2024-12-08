@@ -94,7 +94,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         setTimeout(() => {
                             card.style.opacity = '1';
                             card.style.transform = 'translateY(0)';
-                            animateProgressBar(card);
                         }, index * 200);
                         observer.unobserve(entry.target);
                     }
@@ -105,12 +104,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function animateProgressBar(card) {
-        const progress = card.querySelector('.skill-progress');
-        const level = card.dataset.level;
-        progress.style.background = `conic-gradient(var(--primary) ${level * 3.6}deg, transparent 0deg)`;
-    }
-
     document.querySelectorAll('.skill-card').forEach(card => {
         card.style.opacity = '0';
         card.style.transform = 'translateY(50px)';
@@ -118,33 +111,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     animateSkills();
 
-    function setupImageCarousels() {
-        const carouselContainers = document.querySelectorAll('.project-card, .service-card');
-        carouselContainers.forEach(container => {
-            const images = container.querySelectorAll('.project-images img, .service-images img');
-            let currentIndex = 0;
-
-            function showNextImage() {
-                images[currentIndex].classList.remove('active');
-                currentIndex = (currentIndex + 1) % images.length;
-                images[currentIndex].classList.add('active');
-            }
-
-            setInterval(showNextImage, 5000);
+    // Registro del Service Worker
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function () {
+            navigator.serviceWorker.register('./sw.js')
+                .then(registration => {
+                    console.log('Service Worker registrado:', registration);
+                })
+                .catch(error => {
+                    console.error('Error registrando el Service Worker:', error);
+                });
         });
     }
-
-    setupImageCarousels();
 });
-
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function () {
-        navigator.serviceWorker.register('./sw.js') // Cambié a ruta relativa
-            .then(registration => {
-                console.log('SW registrado: ', registration);
-            })
-            .catch(registrationError => {
-                console.error('SW registro fallido: ', registrationError);
-            });
-    });
-}
