@@ -3,11 +3,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const navMenu = document.querySelector('.nav-menu');
     const header = document.querySelector('.header');
     const navLinks = document.querySelectorAll('.nav-link');
+    const heroElement = document.getElementById('typing-text');
 
-    hamburger.addEventListener('click', mobileMenu);
-    window.addEventListener('scroll', changeHeaderBackground);
-    navLinks.forEach(link => link.addEventListener('click', closeMenu));
-
+    // Funciones de navegación
     function mobileMenu() {
         hamburger.classList.toggle('active');
         navMenu.classList.toggle('active');
@@ -28,6 +26,11 @@ document.addEventListener('DOMContentLoaded', () => {
         navMenu.classList.remove('active');
     }
 
+    // Event listeners
+    hamburger.addEventListener('click', mobileMenu);
+    window.addEventListener('scroll', changeHeaderBackground);
+    navLinks.forEach(link => link.addEventListener('click', closeMenu));
+
     // Smooth scrolling
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function (e) {
@@ -39,104 +42,67 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Active link highlight
-    const sections = document.querySelectorAll('section');
-    window.addEventListener('scroll', () => {
-        let current = '';
-        sections.forEach(section => {
-            const sectionTop = section.offsetTop;
-            const sectionHeight = section.clientHeight;
-            if (pageYOffset >= sectionTop - 60) {
-                current = section.getAttribute('id');
+    function highlightActiveLink() {
+        let scrollPosition = window.scrollY;
+
+        document.querySelectorAll('section').forEach(section => {
+            const sectionTop = section.offsetTop - 100;
+            const sectionBottom = sectionTop + section.offsetHeight;
+            const sectionId = section.getAttribute('id');
+
+            if (scrollPosition >= sectionTop && scrollPosition < sectionBottom) {
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href') === `#${sectionId}`) {
+                        link.classList.add('active');
+                    }
+                });
             }
         });
+    }
 
-        navLinks.forEach(link => {
-            link.classList.remove('active');
-            if (link.getAttribute('href').slice(1) === current) {
-                link.classList.add('active');
-            }
-        });
-    });
+    window.addEventListener('scroll', highlightActiveLink);
 
-    // Typing effect for hero section
-    const heroText = "Desarrollador web y Móvil";
-    const heroElement = document.getElementById('typing-text');
-    let i = 0;
-
+    // Typing effect
     function typeWriter() {
-        if (i < heroText.length) {
-            heroElement.textContent += heroText.charAt(i);
-            i++;
-            setTimeout(typeWriter, 100);
+        if (heroElement) {
+            const heroText = "Desarrollador web y Móvil";
+            let i = 0;
+
+            function type() {
+                if (i < heroText.length) {
+                    heroElement.textContent += heroText.charAt(i);
+                    i++;
+                    setTimeout(type, 100);
+                }
+            }
+
+            type();
         }
     }
 
+    // Iniciar el efecto de escritura después de un breve retraso
     setTimeout(typeWriter, 1000);
 
-    // Project and Service image carousel
-    const carouselContainers = document.querySelectorAll('.project-card, .service-card');
-    carouselContainers.forEach(container => {
-        const images = container.querySelectorAll('.project-images img, .service-images img');
-        let currentIndex = 0;
-
-        function showNextImage() {
-            images[currentIndex].classList.remove('active');
-            currentIndex = (currentIndex + 1) % images.length;
-            images[currentIndex].classList.add('active');
-        }
-
-        setInterval(showNextImage, 5000);
-    });
-
-    // Contact section interactivity
-    const contactItems = document.querySelectorAll('.contact-item');
-
-    contactItems.forEach(item => {
-        item.addEventListener('mouseenter', () => {
-            item.style.transform = 'translateY(-5px)';
-        });
-
-        item.addEventListener('mouseleave', () => {
-            item.style.transform = 'translateY(0)';
-        });
-
-        item.addEventListener('click', (e) => {
-            if (item.getAttribute('href').startsWith('mailto:')) {
-                e.preventDefault();
-                navigator.clipboard.writeText(item.getAttribute('href').replace('mailto:', ''))
-                    .then(() => {
-                        alert('Email copiado al portapapeles');
-                    })
-                    .catch(err => {
-                        console.error('Error al copiar el email: ', err);
-                    });
-            }
-        });
-    });
-
-    // Animación de las habilidades
-    const skillCards = document.querySelectorAll('.skill-card');
-    const skillSection = document.querySelector('#skills');
-
-    function isElementInViewport(el) {
-        const rect = el.getBoundingClientRect();
-        return (
-            rect.top >= 0 &&
-            rect.left >= 0 &&
-            rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
-            rect.right <= (window.innerWidth || document.documentElement.clientWidth)
-        );
-    }
-
+    // Animación de habilidades
     function animateSkills() {
+        const skillCards = document.querySelectorAll('.skill-card');
+
         skillCards.forEach((card, index) => {
-            if (isElementInViewport(card)) {
-                setTimeout(() => {
-                    card.style.opacity = '1';
-                    card.style.transform = 'translateY(0)';
-                    animateProgressBar(card);
-                }, index * 200);
-            }
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        setTimeout(() => {
+                            card.style.opacity = '1';
+                            card.style.transform = 'translateY(0)';
+                            animateProgressBar(card);
+                        }, index * 200);
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.5 });
+
+            observer.observe(card);
         });
     }
 
@@ -147,18 +113,35 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Inicialmente, ocultar las tarjetas de habilidades
-    skillCards.forEach(card => {
+    document.querySelectorAll('.skill-card').forEach(card => {
         card.style.opacity = '0';
         card.style.transform = 'translateY(50px)';
     });
 
-    // Animar las habilidades cuando la sección esté en el viewport
-    window.addEventListener('scroll', animateSkills);
-    window.addEventListener('resize', animateSkills);
-    animateSkills(); // Llamar una vez al cargar la página
+    // Llamar a la función de animación de habilidades
+    animateSkills();
+
+    // Carrusel de imágenes
+    function setupImageCarousels() {
+        const carouselContainers = document.querySelectorAll('.project-card, .service-card');
+        carouselContainers.forEach(container => {
+            const images = container.querySelectorAll('.project-images img, .service-images img');
+            let currentIndex = 0;
+
+            function showNextImage() {
+                images[currentIndex].classList.remove('active');
+                currentIndex = (currentIndex + 1) % images.length;
+                images[currentIndex].classList.add('active');
+            }
+
+            setInterval(showNextImage, 5000);
+        });
+    }
+
+    setupImageCarousels();
 });
 
-// Service Worker Registration for PWA
+// Service Worker Registration
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js').then(registration => {
@@ -168,3 +151,4 @@ if ('serviceWorker' in navigator) {
         });
     });
 }
+
